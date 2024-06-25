@@ -1,3 +1,14 @@
+'''
+Deep Learning for Magnetization Dynamics
+========================================
+
+Author: J. Buch-Palasi
+Date: June 2024
+Institution: University of Barcelona
+Department: Condensed Matter Department
+'''
+
+# Importing the libraries
 import os
 import pandas as pd
 import numpy as np
@@ -10,7 +21,10 @@ from scipy.interpolate import griddata
 from scipy.stats import lognorm
 from keras.optimizers import Adam
 
+
 # read the data from the files --------------------------------------
+
+
 def data_extractor(file_name):
     '''
     Reads a csv file with 3 columns
@@ -115,10 +129,17 @@ def data_generator(N_data,tp, N_random,x_grid,y_grid):
 
 
 def param_norm(x,x_min,x_max):
+    '''
+    Normalitzation of the Neural Networks parameters
+    '''
     x_norm = (x - x_min)/(x_max - x_min)
     return x_norm
 
+
 def A_creation(x_grid,y_grid):
+    '''
+    A random matrix for adding noise
+    '''
     A = np.zeros((y_grid,x_grid))
 
     for i in range(y_grid):
@@ -126,8 +147,14 @@ def A_creation(x_grid,y_grid):
         for j in range(x_grid):
             A[i][j] = rand
     return A
-    
+
+
 def normalization(field_grid, freq_grid,array):
+    '''
+    Normalitzation of the colormap, the normalitzation occurs in function off
+    the max and min respect the average of the freq = cte line
+    '''
+    
     grid_normalized = np.zeros((freq_grid,field_grid))
 
     for i in range(freq_grid):
@@ -179,25 +206,25 @@ def neural_conv():
     return Net 
 
 
-# Neural Network parameters
-tp = 'MsaDHCK0'
+# Neural Network parameters---------------------------
+
+tp = 'MsaDHCK0' # type of data and parameters
 N_data = 10000
 N_random = 20
 field_grid = 64
 freq_grid = 64
-
 epoch = 300
 batch = 1000
 Net = neural_conv()
 
 
-#Obtaining data
+#Obtaining data ----------------------------------
+
 y_train, param_train = data_generator(N_data,tp,N_random,field_grid,freq_grid)
 
-#y_train = np.load('75000_data.npy')
-#param_train = np.load('75000_param.npy')
 
-# training 
+# training ----------------------------------
+
 print('Training the Neural Network')
 loss_encoder = np.zeros((4,epoch))
 for i in tqdm(range(epoch)): 
@@ -217,4 +244,8 @@ plt.rcParams.update({'font.size': 14})
 plt.savefig('lossfunc_e=500.png', dpi = 400)
 print('Last Loss:' ,loss_encoder[0][epoch-1])
 print('Last accuracy', loss_encoder[1][epoch-1])
+
+
+
+
 
