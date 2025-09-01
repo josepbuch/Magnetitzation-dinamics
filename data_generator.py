@@ -5,16 +5,7 @@ import scipy as sp
 from scipy.ndimage import zoom
 import os
 
-
 def Pmag_func(DH, alpha0, ff, HH0, Ku2, Ms):
-	'''
-
-	Parametrized function of the absorved power in FMR experiments. In funtion of 
-	Ms, alpha, DH (inomogeneous linewidth) and Hu (anisotropic uniaxial field)
-
-	The expression has been obtained from Mathematica derivation.
-
-	'''
     term1 = 1e-9 * DH
     term2 = alpha0 * ff
     term3 = 1j * 28 * np.abs(HH0 + (2 * Ku2) / Ms + 1.25664e-6 * Ms)
@@ -42,7 +33,6 @@ def Pmag_func(DH, alpha0, ff, HH0, Ku2, Ms):
     )
     final = - numerator / denom
     return np.real(final), np.imag(final)
-
 
 def param_norm(x,x_min,x_max):
     x_norm = (x - x_min)/(x_max - x_min)
@@ -93,28 +83,27 @@ def A_creation_noise(x_grid,y_grid,noise):
             
     return A    
 
-
-
 #Parameters ------------------------
-np.random.seed(seed = 2024)
+np.random.seed(seed = 2021)
 N_noise = 1
-N_samples = 20000
-Sample_size = 64
-noise = 0
+N_samples = 200000
+Sample_size = 88
+noise = 0.3
 gyro = 28.024*10**9
 margins_grid = 30
 pregrid = Sample_size + 2*margins_grid
 # ----------------------------------
 
 # Set the range for the parameter training
-
+# 200*1000-1400*1000
 xMs = np.random.uniform(low = 5.30, high=6.1461, size = N_samples)
 xalpha0 = np.random.uniform(low = -4, high= -1.3010, size = N_samples)
 xDH = np.random.uniform(low = np.log10(gyro*10**(-5)) , high= np.log10(gyro*10**(-3)), size = N_samples)
 xHu = np.random.uniform(low = -4, high = -1, size = N_samples)
 xKu = np.log10(0.5*10**(xMs)*10**(xHu))
+
 Pmag = []
-param_train = np.zeros((N_samples*N_noise,4))
+param_train = np.zeros((N_samples*N_noise,5))
 
 fmax = 15 ; fmin = 2.5
 hmax = 0.2 ; hmin = 0
@@ -134,6 +123,7 @@ for k in tqdm(range(N_samples)):
     _xalpha0 = xalpha0[k]
     _xDH = xDH[k]
     _xKu = xKu[k]
+    _xHu = xHu[k]
     
     Pmag_re = np.zeros((pregrid,pregrid))
     Pmag_im = np.zeros((pregrid,pregrid))
@@ -159,9 +149,10 @@ for k in tqdm(range(N_samples)):
     param_train[k] = ([param_norm(_xMs,5.30,6.1461),
                        param_norm(_xalpha0,-4,-1.3010), 
                        param_norm(_xDH,np.log10(gyro*10**(-5)),np.log10(gyro*10**(-3))), 
-                       param_norm(_xKu,1,4.84)])
+                       param_norm(_xKu,1,4.84),
+                       param_norm(_xHu, -4,-1)])
 
 Pmag = np.array(Pmag)
 # save the data
-np.save('./train_data/Pmag_20000_ani.npy',Pmag)
-np.save('./train_data/params_20000_ani.npy',param_train)
+np.save('./train_data/Pmag_1.npy',Pmag)
+np.save('./train_data/params_1.npy',param_train)
